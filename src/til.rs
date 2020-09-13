@@ -2,14 +2,14 @@ use chrono::prelude::*;
 use indoc::indoc;
 
 #[derive(PartialEq, Debug)]
-struct TIL {
+pub struct TIL {
     title: String,
     content: String,
     tags: Vec<String>,
     date: Date<Utc>,
 }
 
-fn parse_til(source: String, date: Date<Utc>) -> Option<TIL> {
+pub fn parse_til(source: String, date: Date<Utc>) -> Option<TIL> {
     let lines: Vec<&str> = source.trim().split('\n').collect();
     if lines.len() < 2 {
         return None;
@@ -49,14 +49,12 @@ fn parse_til(source: String, date: Date<Utc>) -> Option<TIL> {
         }
     }
 
-    let result = TIL {
+    Some(TIL {
         title,
         content,
         tags,
         date,
-    };
-
-    Some(result)
+    })
 }
 
 #[cfg(test)]
@@ -138,7 +136,8 @@ mod tests {
             parse_til(input, now),
             Some(TIL {
                 title: "테스트".to_string(),
-                content: "이것은 예시 컨텐츠입니다.\n동해물과 백두산이 마르고 닳도록.\n".to_string(),
+                content: "이것은 예시 컨텐츠입니다.\n동해물과 백두산이 마르고 닳도록.\n"
+                    .to_string(),
                 tags: vec!["태그1".to_string(), "태그2".to_string()],
                 date: now,
             }),
@@ -153,10 +152,7 @@ mod tests {
         "}
         .to_string();
 
-        assert_eq!(
-            parse_til(input, now),
-            None
-        );
+        assert_eq!(parse_til(input, now), None);
 
         let input = indoc! {"
             Title
@@ -166,9 +162,6 @@ mod tests {
         "}
         .to_string();
 
-        assert_eq!(
-            parse_til(input, now),
-            None
-        );
+        assert_eq!(parse_til(input, now), None);
     }
 }
