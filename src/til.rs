@@ -3,10 +3,10 @@ use indoc::indoc;
 
 #[derive(PartialEq, Debug)]
 pub struct TIL {
-    title: String,
-    content: String,
-    category: String,
-    date: Date<Utc>,
+    pub title: String,
+    pub content: String,
+    pub category: String,
+    pub date: Date<Utc>,
 }
 
 pub fn parse_til(source: &String, date: Date<Utc>) -> Option<TIL> {
