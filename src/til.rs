@@ -9,7 +9,7 @@ pub struct TIL {
     date: Date<Utc>,
 }
 
-pub fn parse_til(source: String, date: Date<Utc>) -> Option<TIL> {
+pub fn parse_til(source: &String, date: Date<Utc>) -> Option<TIL> {
     let lines: Vec<&str> = source.trim().split('\n').collect();
     if lines.len() < 2 {
         return None;
@@ -73,7 +73,7 @@ mod tests {
         .to_string();
 
         assert_eq!(
-            parse_til(input, now),
+            parse_til(&input, now),
             Some(TIL {
                 title: "Title".to_string(),
                 content: "This is a sample content.\nLorem ipsum.\n".to_string(),
@@ -93,7 +93,7 @@ mod tests {
         .to_string();
 
         assert_eq!(
-            parse_til(input, now),
+            parse_til(&input, now),
             Some(TIL {
                 title: "Title".to_string(),
                 content: "This is a sample content.\nLorem ipsum.\n".to_string(),
@@ -113,7 +113,7 @@ mod tests {
         .to_string();
 
         assert_eq!(
-            parse_til(input, now),
+            parse_til(&input, now),
             Some(TIL {
                 title: "Title".to_string(),
                 content: "This is a sample content.\n".to_string(),
@@ -133,7 +133,7 @@ mod tests {
         .to_string();
 
         assert_eq!(
-            parse_til(input, now),
+            parse_til(&input, now),
             Some(TIL {
                 title: "테스트".to_string(),
                 content: "이것은 예시 컨텐츠입니다.\n동해물과 백두산이 마르고 닳도록.\n"
@@ -152,7 +152,7 @@ mod tests {
         "}
         .to_string();
 
-        assert_eq!(parse_til(input, now), None);
+        assert_eq!(parse_til(&input, now), None);
 
         let input = indoc! {"
             Title
@@ -162,6 +162,6 @@ mod tests {
         "}
         .to_string();
 
-        assert_eq!(parse_til(input, now), None);
+        assert_eq!(parse_til(&input, now), None);
     }
 }

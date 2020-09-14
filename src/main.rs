@@ -1,4 +1,5 @@
 use tbot::prelude::*;
+use chrono::prelude::*;
 
 mod til;
 
@@ -8,12 +9,14 @@ async fn main() {
 
     bot.text(|context| async move {
         dbg!(&context);
-        let echo = &context.text.value;
-        let call_result = context.send_message(echo).call().await;
+        let text = &context.text.value;
+        let naive = NaiveDateTime::from_timestamp(context.date, 0);
+        let date: Date<Utc> = Date::from_utc(naive.date(), Utc);
 
-        if let Err(err) = call_result {
-            dbg!(err);
-        }
+        let til = til::parse_til(text, date);
+        dbg!(til);
+        //let echo = til::parse_til(&context.text.value);
+
     });
 
     bot.edited_text(|context| async move {
