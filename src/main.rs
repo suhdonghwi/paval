@@ -1,9 +1,9 @@
 use std::env;
 
 use chrono::prelude::*;
-use tbot::prelude::*;
-use tbot::contexts::fields::*;
 use std::sync::Arc;
+use tbot::contexts::fields::*;
+use tbot::prelude::*;
 
 mod til;
 
@@ -44,28 +44,32 @@ async fn post_handler<T: Text + Message>(context: Arc<T>) {
         Err(_) => panic!("Environment variable `PAVAL_API_PATH` does not exist"),
     };
 
-    if let Some(til) = til::parse_til(text, date) {
+    let send_result = if let Some(til) = til::parse_til(text, date) {
         let post_result = post_til(&til, &api_path).await;
 
         match post_result {
             Ok(res) => {
-                if res.status() == 200 {
-                    println!("✅ Successfully posted : {}", til.title);
+                let message = if res.status() != 200 {
+                    format!("😢 Could not post TIL : status {}", res.status())
                 } else {
-                    let error_message = format!("😢 Could not post TIL : status {}", res.status());
-                    context.send_message_in_reply(&error_message).call().await;
-                }
+                    format!("✅ Successfully posted : {}", til.title)
+                };
+
+                context.send_message_in_reply(&message).call().await
             }
             Err(post_err) => {
                 let error_message = format!("😢 Could not post TIL : {}", post_err);
-                context.send_message_in_reply(&error_message).call().await;
+                context.send_message_in_reply(&error_message).call().await
             }
-        };
+        }
     } else {
         context
             .send_message_in_reply("😢 Could not parse TIL post")
             .call()
-            .await;
+            .await
+    };
+
+    if let Err(err) = send_result {
+        dbg!(err);
     }
 }
-    

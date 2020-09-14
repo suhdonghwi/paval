@@ -20,12 +20,14 @@ pub fn parse_til(source: &String, date: Date<Utc>) -> Option<TIL> {
 
     for i in 1..lines.len() - 1 {
         if lines[i].trim().is_empty() {
-            continue;
+            content.push('\n');
         } else {
             content.push_str(lines[i]);
             content.push('\n');
         }
     }
+
+    content = content.trim().to_string();
 
     if content.is_empty() {
         return None;
@@ -69,7 +71,7 @@ mod tests {
             parse_til(&input, now),
             Some(TIL {
                 title: "Title".to_string(),
-                content: "This is a sample content.\nLorem ipsum.\n".to_string(),
+                content: "This is a sample content.\nLorem ipsum.".to_string(),
                 category: "category".to_string(),
                 date: now,
             }),
@@ -89,7 +91,29 @@ mod tests {
             parse_til(&input, now),
             Some(TIL {
                 title: "Title".to_string(),
-                content: "This is a sample content.\n".to_string(),
+                content: "This is a sample content.".to_string(),
+                category: "tag1".to_string(),
+                date: now,
+            }),
+        );
+
+        let input = indoc! {"
+            Title
+
+            This is a sample content.
+
+            This is new line content.
+
+
+            #tag1  
+        "}
+        .to_string();
+
+        assert_eq!(
+            parse_til(&input, now),
+            Some(TIL {
+                title: "Title".to_string(),
+                content: "This is a sample content.\n\nThis is new line content.".to_string(),
                 category: "tag1".to_string(),
                 date: now,
             }),
@@ -109,7 +133,7 @@ mod tests {
             parse_til(&input, now),
             Some(TIL {
                 title: "테스트".to_string(),
-                content: "이것은 예시 컨텐츠입니다.\n동해물과 백두산이 마르고 닳도록.\n"
+                content: "이것은 예시 컨텐츠입니다.\n동해물과 백두산이 마르고 닳도록."
                     .to_string(),
                 category: "태그".to_string(),
                 date: now,
