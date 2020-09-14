@@ -5,7 +5,7 @@ use indoc::indoc;
 pub struct TIL {
     title: String,
     content: String,
-    tags: Vec<String>,
+    category: String,
     date: Date<Utc>,
 }
 
@@ -32,29 +32,19 @@ pub fn parse_til(source: &String, date: Date<Utc>) -> Option<TIL> {
     }
 
     let last_line = lines[lines.len() - 1];
-    let mut tags = Vec::new();
     match last_line.chars().nth(0) {
         Some('#') => {
-            let items: Vec<&str> = last_line.split(' ').collect();
-            for item in items {
-                if item.trim().is_empty() {
-                    continue;
-                }
-                tags.push(String::from(&item[1..]));
-            }
-        }
-        _ => {
-            content.push_str(last_line);
-            content.push('\n');
-        }
-    }
+            let category = String::from(&last_line[1..]);
 
-    Some(TIL {
-        title,
-        content,
-        tags,
-        date,
-    })
+            Some(TIL {
+                title,
+                content,
+                category,
+                date,
+            })
+        }
+        _ => None
+    }
 }
 
 #[cfg(test)]
@@ -64,11 +54,14 @@ mod tests {
     #[test]
     fn test_parse_til() {
         let now = Utc::today();
+
         let input = indoc! {"
             Title
 
             This is a sample content.
             Lorem ipsum.
+
+            #category
         "}
         .to_string();
 
@@ -77,27 +70,7 @@ mod tests {
             Some(TIL {
                 title: "Title".to_string(),
                 content: "This is a sample content.\nLorem ipsum.\n".to_string(),
-                tags: vec![],
-                date: now,
-            }),
-        );
-
-        let input = indoc! {"
-            Title
-
-            This is a sample content.
-            Lorem ipsum.
-
-            #tag1 #tag2
-        "}
-        .to_string();
-
-        assert_eq!(
-            parse_til(&input, now),
-            Some(TIL {
-                title: "Title".to_string(),
-                content: "This is a sample content.\nLorem ipsum.\n".to_string(),
-                tags: vec!["tag1".to_string(), "tag2".to_string()],
+                category: "category".to_string(),
                 date: now,
             }),
         );
@@ -108,7 +81,7 @@ mod tests {
             This is a sample content.
 
 
-            #tag1   #tag2
+            #tag1  
         "}
         .to_string();
 
@@ -117,7 +90,7 @@ mod tests {
             Some(TIL {
                 title: "Title".to_string(),
                 content: "This is a sample content.\n".to_string(),
-                tags: vec!["tag1".to_string(), "tag2".to_string()],
+                category: "tag1".to_string(),
                 date: now,
             }),
         );
@@ -128,7 +101,7 @@ mod tests {
             이것은 예시 컨텐츠입니다.
             동해물과 백두산이 마르고 닳도록.
 
-            #태그1 #태그2
+            #태그
         "}
         .to_string();
 
@@ -138,7 +111,7 @@ mod tests {
                 title: "테스트".to_string(),
                 content: "이것은 예시 컨텐츠입니다.\n동해물과 백두산이 마르고 닳도록.\n"
                     .to_string(),
-                tags: vec!["태그1".to_string(), "태그2".to_string()],
+                category: "태그".to_string(),
                 date: now,
             }),
         );
@@ -157,7 +130,16 @@ mod tests {
         let input = indoc! {"
             Title
 
-            #tag1 #tag2
+            This is a content.
+        "}
+        .to_string();
+
+        assert_eq!(parse_til(&input, now), None);
+
+        let input = indoc! {"
+            Title
+
+            #tag
 
         "}
         .to_string();

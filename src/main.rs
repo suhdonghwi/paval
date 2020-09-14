@@ -1,11 +1,14 @@
-use tbot::prelude::*;
+use std::env;
+
 use chrono::prelude::*;
+use tbot::prelude::*;
 
 mod til;
 
 #[tokio::main]
 async fn main() {
     let mut bot = tbot::from_env!("TBOT_TOKEN").event_loop();
+    let api_path = env::var("PAVAL_API_PATH");
 
     bot.text(|context| async move {
         dbg!(&context);
@@ -16,7 +19,9 @@ async fn main() {
         let til = til::parse_til(text, date);
         dbg!(til);
         //let echo = til::parse_til(&context.text.value);
+    });
 
+    bot.command("register", |context| async move {
     });
 
     bot.edited_text(|context| async move {
