@@ -2,6 +2,7 @@ use std::fs;
 use std::process::Command;
 
 use crate::til;
+use crate::env::*;
 
 pub fn git_command(args: &[&str], dir: &str) {
     Command::new("git")
@@ -13,7 +14,7 @@ pub fn git_command(args: &[&str], dir: &str) {
         .expect("Failed git command");
 }
 
-pub fn add_til(til: &til::TIL, git_url: &str) -> std::io::Result<()> {
+pub fn add_til(til: &til::TIL) -> std::io::Result<()> {
     let til_content = til.to_markdown();
     let til_path = format!("./til/src/docs/{}/{}.md", til.category, til.title);
 
@@ -30,7 +31,7 @@ pub fn add_til(til: &til::TIL, git_url: &str) -> std::io::Result<()> {
 
     git_command(&["stage", "."], "./til");
     git_command(&["commit", "-m", commit_message], "./til");
-    git_command(&["push", git_url], "./til");
+    git_command(&["push", &*GIT_URL], "./til");
 
     Ok(())
 }

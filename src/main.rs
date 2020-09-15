@@ -49,7 +49,7 @@ async fn post_handler<T: Text + Message>(context: Arc<T>) {
     }
 
     let send_result = if let Some(til) = til::parse_til(text, date) {
-        let post_result = manager::add_til(&til, &*GIT_URL);
+        let post_result = manager::add_til(&til);
 
         match post_result {
             Ok(_) => {
