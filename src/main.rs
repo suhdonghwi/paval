@@ -26,9 +26,9 @@ async fn main() {
     bot.edited_text(move |context| post_handler(context, api_path2.clone()));
 
     let bot_url = get_env("WEBHOOK_URL");
-    let port = get_env("WEBHOOK_PORT")
+    let port = get_env("PORT")
         .parse()
-        .expect("Invalid WEBHOOK_PORT");
+        .expect("Invalid PORT");
 
     println!("Starting at {}:{}", bot_url, port);
     bot.webhook(&bot_url, port)
