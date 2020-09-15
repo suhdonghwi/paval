@@ -20,14 +20,12 @@ fn get_env(env: &str) -> String {
 #[tokio::main]
 async fn main() {
     let git_url = get_env("PAVAL_GIT_URL");
+    let git_email = get_env("PAVAL_GIT_EMAIL");
+    let git_name = get_env("PAVAL_GIT_NAME");
 
-    Command::new("git")
-        .arg("clone")
-        .arg(&git_url)
-        .spawn()
-        .expect("Failed process spawning")
-        .wait()
-        .expect("Failed git clone");
+    manager::git_command(&["clone", &git_url], ".");
+    manager::git_command(&["config", "--global", "user.email", &git_email], ".");
+    manager::git_command(&["config", "--global", "user.name", &git_name], ".");
 
     let token = get_env("PAVAL_BOT_TOKEN");
     let mut bot = tbot::Bot::new(token.clone()).event_loop();

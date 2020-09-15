@@ -3,9 +3,9 @@ use std::process::Command;
 
 use crate::til;
 
-pub fn git_command(args: &[&str]) {
+pub fn git_command(args: &[&str], dir: &str) {
     Command::new("git")
-        .current_dir("./til")
+        .current_dir(dir)
         .args(args)
         .spawn()
         .expect("Failed process spawning")
@@ -28,9 +28,9 @@ pub fn add_til(til: &til::TIL, git_url: &str) -> std::io::Result<()> {
 
     let commit_message = &format!("chore(post): add '{}' post", til.title);
 
-    git_command(&["stage", "."]);
-    git_command(&["commit", "-m", commit_message]);
-    git_command(&["push", git_url]);
+    git_command(&["stage", "."], "./til");
+    git_command(&["commit", "-m", commit_message], "./til");
+    git_command(&["push", git_url], "./til");
 
     Ok(())
 }
