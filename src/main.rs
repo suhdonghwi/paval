@@ -33,6 +33,7 @@ async fn main() {
     println!("Starting at {}:{}", bot_url, port);
     bot.webhook(&bot_url, port)
         .accept_updates_on(format!("/{}", token))
+        .ip("0.0.0.0".parse().unwrap())
         .http()
         .start()
         .await
