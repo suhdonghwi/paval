@@ -69,6 +69,7 @@ async fn post_handler<T: Text + Message>(context: Arc<T>, api_path: String) {
         match post_result {
             Ok(res) => {
                 let message = if res.status() != 200 {
+                    dbg!(&res);
                     format!("😢 Could not post TIL : status {}", res.status())
                 } else {
                     format!("✅ Successfully posted : {}", til.title)
@@ -77,6 +78,7 @@ async fn post_handler<T: Text + Message>(context: Arc<T>, api_path: String) {
                 context.send_message_in_reply(&message).call().await
             }
             Err(post_err) => {
+                dbg!(&post_err);
                 let error_message = format!("😢 Could not post TIL : {}", post_err);
                 context.send_message_in_reply(&error_message).call().await
             }
