@@ -7,21 +7,26 @@ use tbot::prelude::*;
 
 mod til;
 
+fn get_env(env: &str) -> String {
+    match env::var(env) {
+        Ok(var) => var,
+        Err(_) => panic!("Environment variable `PAVAL_API_PATH` does not exist"),
+    }
+}
+
 #[tokio::main]
 async fn main() {
     let mut bot = tbot::from_env!("PAVAL_BOT_TOKEN").event_loop();
 
-    let api_path = match env::var("PAVAL_API_PATH") {
-        Ok(var) => var,
-        Err(_) => panic!("Environment variable `PAVAL_API_PATH` does not exist"),
-    };
-
+    let api_path = get_env("PAVAL_API_PATH");
     let api_path2 = api_path.clone();
 
     bot.text(move |context| post_handler(context, api_path.clone()));
     bot.edited_text(move |context| post_handler(context, api_path2.clone()));
 
-    bot.polling().start().await.unwrap();
+    let bot_url = get_env("PAVAL_BOT_URL");
+    const PORT: u16 = 80;
+    bot.webhook(&bot_url, PORT).http().start().await.unwrap();
 }
 
 async fn post_til(til: &til::TIL, api_path: &String) -> Result<reqwest::Response, reqwest::Error> {
