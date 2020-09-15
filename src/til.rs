@@ -8,6 +8,12 @@ pub struct TIL {
     pub date: Date<Utc>,
 }
 
+impl TIL {
+    pub fn to_markdown(&self) -> String {
+        format!("# {}\n\n{}\n", self.title, self.content)
+    }
+}
+
 pub fn parse_til(source: &String, date: Date<Utc>) -> Option<TIL> {
     let lines: Vec<&str> = source.trim().split('\n').collect();
     if lines.len() < 2 {
@@ -44,7 +50,7 @@ pub fn parse_til(source: &String, date: Date<Utc>) -> Option<TIL> {
                 date,
             })
         }
-        _ => None
+        _ => None,
     }
 }
 
@@ -133,8 +139,7 @@ mod tests {
             parse_til(&input, now),
             Some(TIL {
                 title: "테스트".to_string(),
-                content: "이것은 예시 컨텐츠입니다.\n동해물과 백두산이 마르고 닳도록."
-                    .to_string(),
+                content: "이것은 예시 컨텐츠입니다.\n동해물과 백두산이 마르고 닳도록.".to_string(),
                 category: "태그".to_string(),
                 date: now,
             }),

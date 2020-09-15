@@ -1,11 +1,13 @@
 use std::env;
+use std::process::Command;
+use std::sync::Arc;
 
 use chrono::prelude::*;
-use std::sync::Arc;
 use tbot::contexts::fields::*;
 use tbot::prelude::*;
 use tbot::types::chat::Id;
 
+mod manager;
 mod til;
 
 fn get_env(env: &str) -> String {
@@ -17,17 +19,23 @@ fn get_env(env: &str) -> String {
 
 #[tokio::main]
 async fn main() {
+    let git_url = get_env("PAVAL_GIT_URL");
+
+    let mut clone_command = Command::new(format!("git clone {} til", git_url));
+    clone_command
+        .spawn()
+        .expect("Failed to clone git respository");
+
     let token = get_env("PAVAL_BOT_TOKEN");
     let mut bot = tbot::Bot::new(token.clone()).event_loop();
 
-    let api_path = get_env("PAVAL_API_PATH");
     let channel_id = Id::from(
         get_env("PAVAL_CHANNEL_ID")
             .parse::<i64>()
             .expect("Invalid PAVAL_CHANNEL_ID"),
     );
 
-    bot.text(move |context| post_handler(context, api_path.clone(), channel_id.clone()));
+    bot.text(move |context| post_handler(context, channel_id.clone()));
 
     let bot_url = get_env("WEBHOOK_URL");
     let port = get_env("PORT").parse().expect("Invalid PORT");
@@ -43,24 +51,7 @@ async fn main() {
     //bot.polling().start().await.unwrap();
 }
 
-async fn post_til(til: &til::TIL, api_path: &String) -> Result<reqwest::Response, reqwest::Error> {
-    let client = reqwest::Client::new();
-    let content = format!("# {}\n\n {}", til.title, til.content);
-
-    let res = client
-        .post(api_path)
-        .query(&[
-            ("fields[title]", &til.title),
-            ("fields[content]", &content),
-            ("fields[category]", &til.category),
-        ])
-        .send()
-        .await?;
-
-    Ok(res)
-}
-
-async fn post_handler<T: Text + Message>(context: Arc<T>, api_path: String, channel_id: Id) {
+async fn post_handler<T: Text + Message>(context: Arc<T>, channel_id: Id) {
     let text = &context.text().value;
     let naive = NaiveDateTime::from_timestamp(context.date(), 0);
     let date: Date<Utc> = Date::from_utc(naive.date(), Utc);
@@ -73,21 +64,15 @@ async fn post_handler<T: Text + Message>(context: Arc<T>, api_path: String, chan
             dbg!(err);
         }
 
-        return ()
+        return ();
     }
 
     let send_result = if let Some(til) = til::parse_til(text, date) {
-        let post_result = post_til(&til, &api_path).await;
+        let post_result = manager::add_til(&til);
 
         match post_result {
-            Ok(res) => {
-                let message = if res.status() != 200 {
-                    dbg!(&res);
-                    format!("😢 Could not post TIL : status {}", res.status())
-                } else {
-                    format!("✅ Successfully posted : {}", til.title)
-                };
-
+            Ok(_) => {
+                let message = format!("✅ Successfully posted : {}", til.title);
                 context.send_message_in_reply(&message).call().await
             }
             Err(post_err) => {
