@@ -1,6 +1,6 @@
 use std::env;
 use std::sync::Arc;
-use tokio::process::Command;
+use std::process::Command;
 
 use chrono::prelude::*;
 use tbot::contexts::fields::*;
@@ -18,15 +18,16 @@ fn get_env(env: &str) -> String {
 }
 
 #[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
+async fn main() {
     let git_url = get_env("PAVAL_GIT_URL");
 
     Command::new("git")
         .arg("clone")
-        .arg(git_url)
+        .arg(&git_url)
         .spawn()
-        .expect("git clone failed")
-        .await?;
+        .expect("Failed process spawning")
+        .wait()
+        .expect("Failed git clone");
 
     let token = get_env("PAVAL_BOT_TOKEN");
     let mut bot = tbot::Bot::new(token.clone()).event_loop();
@@ -37,7 +38,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             .expect("Invalid PAVAL_CHANNEL_ID"),
     );
 
-    bot.text(move |context| post_handler(context, channel_id.clone()));
+    bot.text(move |context| post_handler(context, channel_id.clone(), git_url.clone()));
 
     let bot_url = get_env("WEBHOOK_URL");
     let port = get_env("PORT").parse().expect("Invalid PORT");
@@ -50,11 +51,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .start()
         .await
         .unwrap();
-    //bot.polling().start().await.unwrap();
-    Ok(())
+    // bot.polling().start().await.unwrap();
 }
 
-async fn post_handler<T: Text + Message>(context: Arc<T>, channel_id: Id) {
+async fn post_handler<T: Text + Message>(context: Arc<T>, channel_id: Id, git_url: String) {
     let text = &context.text().value;
     let naive = NaiveDateTime::from_timestamp(context.date(), 0);
     let date: Date<Utc> = Date::from_utc(naive.date(), Utc);
@@ -71,7 +71,7 @@ async fn post_handler<T: Text + Message>(context: Arc<T>, channel_id: Id) {
     }
 
     let send_result = if let Some(til) = til::parse_til(text, date) {
-        let post_result = manager::add_til(&til);
+        let post_result = manager::add_til(&til, &git_url);
 
         match post_result {
             Ok(_) => {
