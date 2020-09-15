@@ -9,7 +9,7 @@ mod til;
 
 #[tokio::main]
 async fn main() {
-    let mut bot = tbot::from_env!("TBOT_TOKEN").event_loop();
+    let mut bot = tbot::from_env!("PAVAL_BOT_TOKEN").event_loop();
 
     let api_path = match env::var("PAVAL_API_PATH") {
         Ok(var) => var,
