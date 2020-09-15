@@ -3,12 +3,13 @@ use std::process::Command;
 
 use crate::til;
 
-pub fn git_command(arg: &str) {
+pub fn git_command(args: &[&str]) {
+    &[1, 2];
     Command::new("git")
         .current_dir("./til")
-        .arg(arg)
+        .args(args)
         .spawn()
-        .expect(&format!("'git {}' command failed", arg));
+        .expect("git command failed");
 }
 
 pub fn add_til(til: &til::TIL) -> std::io::Result<()> {
@@ -17,11 +18,11 @@ pub fn add_til(til: &til::TIL) -> std::io::Result<()> {
 
     fs::write(til_path, til_content)?;
 
-    let commit_message = format!("chore(post): add '{}' post", til.title);
+    let commit_message = &format!("\"chore(post): add '{}' post\"", til.title);
 
-    git_command("stage .");
-    git_command(&format!("commit -m \"{}\"", commit_message));
-    git_command("push");
+    git_command(&["stage", "."]);
+    git_command(&["commit", "-m", commit_message]);
+    git_command(&["push"]);
 
     Ok(())
 }

@@ -22,7 +22,8 @@ async fn main() {
     let git_url = get_env("PAVAL_GIT_URL");
 
     Command::new("git")
-        .arg(format!("clone {} til", git_url))
+        .arg("clone")
+        .arg(git_url)
         .spawn()
         .expect("Failed to clone git respository");
 
