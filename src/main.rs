@@ -10,7 +10,7 @@ mod til;
 fn get_env(env: &str) -> String {
     match env::var(env) {
         Ok(var) => var,
-        Err(_) => panic!("Environment variable `PAVAL_API_PATH` does not exist"),
+        Err(_) => panic!(format!("Environment variable `{}` does not exist", env)),
     }
 }
 
