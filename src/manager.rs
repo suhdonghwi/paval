@@ -4,7 +4,6 @@ use std::process::Command;
 use crate::til;
 
 pub fn git_command(args: &[&str]) {
-    &[1, 2];
     Command::new("git")
         .current_dir("./til")
         .args(args)

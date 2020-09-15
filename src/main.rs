@@ -1,6 +1,6 @@
 use std::env;
-use std::process::Command;
 use std::sync::Arc;
+use tokio::process::Command;
 
 use chrono::prelude::*;
 use tbot::contexts::fields::*;
@@ -18,14 +18,15 @@ fn get_env(env: &str) -> String {
 }
 
 #[tokio::main]
-async fn main() {
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let git_url = get_env("PAVAL_GIT_URL");
 
     Command::new("git")
         .arg("clone")
         .arg(git_url)
         .spawn()
-        .expect("Failed to clone git respository");
+        .expect("git clone failed")
+        .await?;
 
     let token = get_env("PAVAL_BOT_TOKEN");
     let mut bot = tbot::Bot::new(token.clone()).event_loop();
@@ -50,6 +51,7 @@ async fn main() {
         .await
         .unwrap();
     //bot.polling().start().await.unwrap();
+    Ok(())
 }
 
 async fn post_handler<T: Text + Message>(context: Arc<T>, channel_id: Id) {
