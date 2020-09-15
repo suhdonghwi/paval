@@ -16,7 +16,8 @@ fn get_env(env: &str) -> String {
 
 #[tokio::main]
 async fn main() {
-    let mut bot = tbot::from_env!("PAVAL_BOT_TOKEN").event_loop();
+    let token = get_env("PAVAL_BOT_TOKEN");
+    let mut bot = tbot::Bot::new(token.clone()).event_loop();
 
     let api_path = get_env("PAVAL_API_PATH");
     let api_path2 = api_path.clone();
@@ -24,12 +25,19 @@ async fn main() {
     bot.text(move |context| post_handler(context, api_path.clone()));
     bot.edited_text(move |context| post_handler(context, api_path2.clone()));
 
-    //let bot_url = get_env("PAVAL_BOT_URL");
-    //const PORT: u16 = 80;
+    let bot_url = get_env("WEBHOOK_URL");
+    let port = get_env("WEBHOOK_PORT")
+        .parse()
+        .expect("Invalid WEBHOOK_PORT");
 
-    //println!("Starting at {}:{}", bot_url, PORT);
-    //bot.webhook(&bot_url, PORT).http().start().await.unwrap();
-    bot.polling().start().await.unwrap();
+    println!("Starting at {}:{}", bot_url, port);
+    bot.webhook(&bot_url, port)
+        .accept_updates_on(format!("/{}", token))
+        .http()
+        .start()
+        .await
+        .unwrap();
+    //bot.polling().start().await.unwrap();
 }
 
 async fn post_til(til: &til::TIL, api_path: &String) -> Result<reqwest::Response, reqwest::Error> {
