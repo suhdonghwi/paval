@@ -1,32 +1,14 @@
-use std::env;
 use std::sync::Arc;
 
 use chrono::prelude::*;
-use lazy_static::lazy_static;
 use tbot::contexts::fields::*;
 use tbot::prelude::*;
-use tbot::types::chat::Id;
 
 mod manager;
 mod til;
+mod env;
 
-fn get_env(env: &str) -> String {
-    match env::var(env) {
-        Ok(var) => var,
-        Err(_) => panic!(format!("Environment variable `{}` does not exist", env)),
-    }
-}
-
-lazy_static! {
-    static ref GIT_URL: String = get_env("PAVAL_GIT_URL");
-    static ref GIT_EMAIL: String = get_env("PAVAL_GIT_EMAIL");
-    static ref GIT_NAME: String = get_env("PAVAL_GIT_NAME");
-    static ref CHANNEL_ID: Id = Id::from(
-        get_env("PAVAL_CHANNEL_ID")
-            .parse::<i64>()
-            .expect("Invalid PAVAL_CHANNEL_ID")
-    );
-}
+use env::*;
 
 #[tokio::main]
 async fn main() {
@@ -34,18 +16,14 @@ async fn main() {
     manager::git_command(&["config", "--global", "user.email", &*GIT_EMAIL], ".");
     manager::git_command(&["config", "--global", "user.name", &*GIT_NAME], ".");
 
-    let token = get_env("PAVAL_BOT_TOKEN");
-    let mut bot = tbot::Bot::new(token.clone()).event_loop();
+    let mut bot = tbot::Bot::new((*BOT_TOKEN).clone()).event_loop();
 
     bot.text(move |context| post_handler(context));
     bot.edited_text(move |context| post_handler(context));
 
-    let bot_url = get_env("WEBHOOK_URL");
-    let port = get_env("PORT").parse().expect("Invalid PORT");
-
-    println!("Starting at {}:{}", bot_url, port);
-    bot.webhook(&bot_url, port)
-        .accept_updates_on(format!("/{}", token))
+    println!("Starting at {}:{}", *BOT_URL, *PORT);
+    bot.webhook(&*BOT_URL, *PORT)
+        .accept_updates_on(format!("/{}", *BOT_TOKEN))
         .ip("0.0.0.0".parse().unwrap())
         .http()
         .start()
