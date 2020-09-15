@@ -1,8 +1,8 @@
 use std::env;
 use std::sync::Arc;
-use std::process::Command;
 
 use chrono::prelude::*;
+use lazy_static::lazy_static;
 use tbot::contexts::fields::*;
 use tbot::prelude::*;
 use tbot::types::chat::Id;
@@ -17,26 +17,28 @@ fn get_env(env: &str) -> String {
     }
 }
 
+lazy_static! {
+    static ref GIT_URL: String = get_env("PAVAL_GIT_URL");
+    static ref GIT_EMAIL: String = get_env("PAVAL_GIT_EMAIL");
+    static ref GIT_NAME: String = get_env("PAVAL_GIT_NAME");
+    static ref CHANNEL_ID: Id = Id::from(
+        get_env("PAVAL_CHANNEL_ID")
+            .parse::<i64>()
+            .expect("Invalid PAVAL_CHANNEL_ID")
+    );
+}
+
 #[tokio::main]
 async fn main() {
-    let git_url = get_env("PAVAL_GIT_URL");
-    let git_email = get_env("PAVAL_GIT_EMAIL");
-    let git_name = get_env("PAVAL_GIT_NAME");
-
-    manager::git_command(&["clone", &git_url], ".");
-    manager::git_command(&["config", "--global", "user.email", &git_email], ".");
-    manager::git_command(&["config", "--global", "user.name", &git_name], ".");
+    manager::git_command(&["clone", &*GIT_URL], ".");
+    manager::git_command(&["config", "--global", "user.email", &*GIT_EMAIL], ".");
+    manager::git_command(&["config", "--global", "user.name", &*GIT_NAME], ".");
 
     let token = get_env("PAVAL_BOT_TOKEN");
     let mut bot = tbot::Bot::new(token.clone()).event_loop();
 
-    let channel_id = Id::from(
-        get_env("PAVAL_CHANNEL_ID")
-            .parse::<i64>()
-            .expect("Invalid PAVAL_CHANNEL_ID"),
-    );
-
-    bot.text(move |context| post_handler(context, channel_id.clone(), git_url.clone()));
+    bot.text(move |context| post_handler(context));
+    bot.edited_text(move |context| post_handler(context));
 
     let bot_url = get_env("WEBHOOK_URL");
     let port = get_env("PORT").parse().expect("Invalid PORT");
@@ -52,12 +54,12 @@ async fn main() {
     // bot.polling().start().await.unwrap();
 }
 
-async fn post_handler<T: Text + Message>(context: Arc<T>, channel_id: Id, git_url: String) {
+async fn post_handler<T: Text + Message>(context: Arc<T>) {
     let text = &context.text().value;
     let naive = NaiveDateTime::from_timestamp(context.date(), 0);
     let date: Date<Utc> = Date::from_utc(naive.date(), Utc);
 
-    if channel_id != context.chat().id {
+    if *CHANNEL_ID != context.chat().id {
         let message = "😠 Channel ID mismatch, how dare you try terrorism!";
         let send_result = context.send_message_in_reply(message).call().await;
 
@@ -69,7 +71,7 @@ async fn post_handler<T: Text + Message>(context: Arc<T>, channel_id: Id, git_ur
     }
 
     let send_result = if let Some(til) = til::parse_til(text, date) {
-        let post_result = manager::add_til(&til, &git_url);
+        let post_result = manager::add_til(&til, &*GIT_URL);
 
         match post_result {
             Ok(_) => {

@@ -13,5 +13,6 @@ tokio = { version = "0.2", features = ["macros", "process"] }
 chrono = "0.4"
 indoc = "1.0"
 reqwest = "0.10"
+lazy_static = "1.4"
 
 
