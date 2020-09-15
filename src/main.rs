@@ -78,7 +78,7 @@ async fn post_handler<T: Text + Message>(
                     dbg!(&res);
                     format!("😢 Could not post TIL : status {}", res.status())
                 } else if channel_id != context.chat().id {
-                    "😠 Channel ID mismatch, how dare you try terrorism!"
+                    String::from("😠 Channel ID mismatch, how dare you try terrorism!")
                 } else {
                     format!("✅ Successfully posted : {}", til.title)
                 };
