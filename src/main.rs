@@ -24,9 +24,12 @@ async fn main() {
     bot.text(move |context| post_handler(context, api_path.clone()));
     bot.edited_text(move |context| post_handler(context, api_path2.clone()));
 
-    let bot_url = get_env("PAVAL_BOT_URL");
-    const PORT: u16 = 80;
-    bot.webhook(&bot_url, PORT).http().start().await.unwrap();
+    //let bot_url = get_env("PAVAL_BOT_URL");
+    //const PORT: u16 = 80;
+
+    //println!("Starting at {}:{}", bot_url, PORT);
+    //bot.webhook(&bot_url, PORT).http().start().await.unwrap();
+    bot.polling().start().await.unwrap();
 }
 
 async fn post_til(til: &til::TIL, api_path: &String) -> Result<reqwest::Response, reqwest::Error> {
