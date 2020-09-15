@@ -60,14 +60,21 @@ async fn post_til(til: &til::TIL, api_path: &String) -> Result<reqwest::Response
     Ok(res)
 }
 
-async fn post_handler<T: Text + Message>(
-    context: Arc<T>,
-    api_path: String,
-    channel_id: Id,
-) {
+async fn post_handler<T: Text + Message>(context: Arc<T>, api_path: String, channel_id: Id) {
     let text = &context.text().value;
     let naive = NaiveDateTime::from_timestamp(context.date(), 0);
     let date: Date<Utc> = Date::from_utc(naive.date(), Utc);
+
+    if channel_id != context.chat().id {
+        let message = "😠 Channel ID mismatch, how dare you try terrorism!";
+        let send_result = context.send_message_in_reply(message).call().await;
+
+        if let Err(err) = send_result {
+            dbg!(err);
+        }
+
+        return ()
+    }
 
     let send_result = if let Some(til) = til::parse_til(text, date) {
         let post_result = post_til(&til, &api_path).await;
@@ -77,8 +84,6 @@ async fn post_handler<T: Text + Message>(
                 let message = if res.status() != 200 {
                     dbg!(&res);
                     format!("😢 Could not post TIL : status {}", res.status())
-                } else if channel_id != context.chat().id {
-                    String::from("😠 Channel ID mismatch, how dare you try terrorism!")
                 } else {
                     format!("✅ Successfully posted : {}", til.title)
                 };

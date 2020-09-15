@@ -1,5 +1,4 @@
 use chrono::prelude::*;
-use indoc::indoc;
 
 #[derive(PartialEq, Debug)]
 pub struct TIL {
@@ -52,6 +51,7 @@ pub fn parse_til(source: &String, date: Date<Utc>) -> Option<TIL> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use indoc::indoc;
 
     #[test]
     fn test_parse_til() {
