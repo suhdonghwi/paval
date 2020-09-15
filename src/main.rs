@@ -21,8 +21,8 @@ fn get_env(env: &str) -> String {
 async fn main() {
     let git_url = get_env("PAVAL_GIT_URL");
 
-    let mut clone_command = Command::new(dbg!(format!("git clone {} til", git_url)));
-    clone_command
+    Command::new("git")
+        .arg(format!("clone {} til", git_url))
         .spawn()
         .expect("Failed to clone git respository");
 
