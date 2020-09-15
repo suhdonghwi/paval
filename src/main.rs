@@ -4,6 +4,7 @@ use chrono::prelude::*;
 use std::sync::Arc;
 use tbot::contexts::fields::*;
 use tbot::prelude::*;
+use tbot::types::chat::Id;
 
 mod til;
 
@@ -20,15 +21,16 @@ async fn main() {
     let mut bot = tbot::Bot::new(token.clone()).event_loop();
 
     let api_path = get_env("PAVAL_API_PATH");
-    let api_path2 = api_path.clone();
+    let channel_id = Id::from(
+        get_env("PAVAL_CHANNEL_ID")
+            .parse::<i64>()
+            .expect("Invalid PAVAL_CHANNEL_ID"),
+    );
 
-    bot.text(move |context| post_handler(context, api_path.clone()));
-    bot.edited_text(move |context| post_handler(context, api_path2.clone()));
+    bot.text(move |context| post_handler(context, api_path.clone(), channel_id.clone()));
 
     let bot_url = get_env("WEBHOOK_URL");
-    let port = get_env("PORT")
-        .parse()
-        .expect("Invalid PORT");
+    let port = get_env("PORT").parse().expect("Invalid PORT");
 
     println!("Starting at {}:{}", bot_url, port);
     bot.webhook(&bot_url, port)
@@ -58,7 +60,11 @@ async fn post_til(til: &til::TIL, api_path: &String) -> Result<reqwest::Response
     Ok(res)
 }
 
-async fn post_handler<T: Text + Message>(context: Arc<T>, api_path: String) {
+async fn post_handler<T: Text + Message>(
+    context: Arc<T>,
+    api_path: String,
+    channel_id: Id,
+) {
     let text = &context.text().value;
     let naive = NaiveDateTime::from_timestamp(context.date(), 0);
     let date: Date<Utc> = Date::from_utc(naive.date(), Utc);
@@ -71,6 +77,8 @@ async fn post_handler<T: Text + Message>(context: Arc<T>, api_path: String) {
                 let message = if res.status() != 200 {
                     dbg!(&res);
                     format!("😢 Could not post TIL : status {}", res.status())
+                } else if channel_id != context.chat().id {
+                    "😠 Channel ID mismatch, how dare you try terrorism!"
                 } else {
                     format!("✅ Successfully posted : {}", til.title)
                 };
