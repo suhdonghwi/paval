@@ -3,6 +3,7 @@ use std::sync::Arc;
 use chrono::prelude::*;
 use tbot::contexts::fields::*;
 use tbot::prelude::*;
+use tbot::util::entities;
 use tbot::types::message::Kind;
 
 mod manager;
@@ -35,7 +36,7 @@ async fn main() {
 }
 
 async fn post_handler<T: Text + Message>(context: Arc<T>) {
-    let text = &context.text().value;
+    let text = tbot::markup::html(entities(&context.text())).to_string();
     let naive = NaiveDateTime::from_timestamp(context.date(), 0);
     let date: Date<Utc> = Date::from_utc(naive.date(), Utc);
 
@@ -50,7 +51,7 @@ async fn post_handler<T: Text + Message>(context: Arc<T>) {
         return ();
     }
 
-    let send_result = if let Some(til) = til::parse_til(text, date) {
+    let send_result = if let Some(til) = til::parse_til(&text, date) {
         let post_result = manager::add_til(&til);
 
         match post_result {
@@ -79,10 +80,11 @@ async fn post_handler<T: Text + Message>(context: Arc<T>) {
 async fn delete_handler<T: MediaMessage>(context: Arc<T>) {
     let send_result = if let Some(to_delete) = context.reply_to() {
         if let Kind::Text(content) = &to_delete.kind {
+            let text = tbot::markup::html(entities(content)).to_string();
             let naive = NaiveDateTime::from_timestamp(context.date(), 0);
             let date: Date<Utc> = Date::from_utc(naive.date(), Utc);
 
-            if let Some(til) = til::parse_til(&content.value, date) {
+            if let Some(til) = til::parse_til(&text, date) {
                 let delete_result = manager::delete_til(&til);
                 
                 match delete_result {
