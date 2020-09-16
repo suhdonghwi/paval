@@ -19,6 +19,7 @@ fn get_til_path(til: &til::TIL) -> String {
 }
 
 fn commit_and_push(commit_message: &str) {
+    git_command(&["pull"], "./til");
     git_command(&["stage", "."], "./til");
     git_command(&["commit", "-m", commit_message], "./til");
     git_command(&["push", &*GIT_URL], "./til");
