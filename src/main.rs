@@ -23,15 +23,15 @@ async fn main() {
     bot.edited_text(move |context| post_handler(context));
     bot.command("delete", |context| delete_handler(context));
 
-    //println!("Starting at {}:{}", *BOT_URL, *PORT);
-    //bot.webhook(&*BOT_URL, *PORT)
-    //    .accept_updates_on(format!("/{}", *BOT_TOKEN))
-    //    .ip("0.0.0.0".parse().unwrap())
-    //    .http()
-    //    .start()
-    //    .await
-    //    .unwrap();
-    bot.polling().start().await.unwrap();
+    println!("Starting at {}:{}", *BOT_URL, *PORT);
+    bot.webhook(&*BOT_URL, *PORT)
+        .accept_updates_on(format!("/{}", *BOT_TOKEN))
+        .ip("0.0.0.0".parse().unwrap())
+        .http()
+        .start()
+        .await
+        .unwrap();
+    //bot.polling().start().await.unwrap();
 }
 
 async fn post_handler<T: Text + Message>(context: Arc<T>) {
